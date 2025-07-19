@@ -417,7 +417,7 @@ async def update_customer(customer_id: str, customer_data: CustomerCreate):
         raise HTTPException(status_code=404, detail="Customer not found")
     
     updated_customer = await db.customers.find_one({"customer_id": customer_id})
-    return Customer(**updated_customer)
+    return Customer(**convert_datetime_to_date_for_customer(updated_customer))
 
 @api_router.delete("/customers/{customer_id}")
 async def delete_customer(customer_id: str):
