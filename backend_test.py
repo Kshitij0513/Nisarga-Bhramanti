@@ -353,14 +353,27 @@ class BackendTester:
         """Test Customer CRUD operations"""
         print("\n🔍 Testing Customer CRUD Operations...")
         
-        if not self.created_tour_id:
+        # First get a valid tour ID from existing tours
+        tours_response = self.make_request("GET", "/tours")
+        if not tours_response or tours_response.status_code != 200:
             self.log_test("customer_crud_tests", "prerequisite", "FAIL", 
-                        "No tour available for customer testing")
+                        "Failed to get tours for customer testing")
             return
+        
+        tours = tours_response.json()
+        if not tours:
+            # Use the created tour if available, otherwise fail
+            if not self.created_tour_id:
+                self.log_test("customer_crud_tests", "prerequisite", "FAIL", 
+                            "No tours available for customer testing")
+                return
+            valid_tour_id = self.created_tour_id
+        else:
+            valid_tour_id = tours[0]["tour_id"]
         
         # Test CREATE with valid data
         customer_data = {
-            "tour_id": self.created_tour_id,
+            "tour_id": valid_tour_id,
             "first_name": "Rajesh",
             "last_name": "Sharma",
             "date_of_birth": "1985-03-15",
@@ -451,7 +464,7 @@ class BackendTester:
                         "Failed to retrieve individual customer")
         
         # Test READ by tour_id filter
-        response = self.make_request("GET", "/customers", params={"tour_id": self.created_tour_id})
+        response = self.make_request("GET", "/customers", params={"tour_id": valid_tour_id})
         
         if response and response.status_code == 200:
             customers = response.json()
