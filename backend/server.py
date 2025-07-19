@@ -178,6 +178,9 @@ class Customer(BaseModel):
     amount_paid: float = 0.0
     payment_method: Optional[str] = None
     
+    # Documents and Photos
+    documents: List[Document] = Field(default_factory=list)
+    
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     
