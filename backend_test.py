@@ -424,11 +424,16 @@ class BackendTester:
         response = self.make_request("POST", "/customers", invalid_pan_data)
         
         if response and response.status_code == 422:  # Validation error expected
-            self.log_test("customer_crud_tests", "invalid_pan_rejection", "PASS", 
-                        "Correctly rejected customer with invalid PAN")
+            error_response = response.json()
+            if "pan_number" in str(error_response.get("detail", "")):
+                self.log_test("customer_crud_tests", "invalid_pan_rejection", "PASS", 
+                            "Correctly rejected customer with invalid PAN")
+            else:
+                self.log_test("customer_crud_tests", "invalid_pan_rejection", "FAIL", 
+                            f"Rejected but wrong reason: {error_response}")
         else:
             self.log_test("customer_crud_tests", "invalid_pan_rejection", "FAIL", 
-                        "Should have rejected invalid PAN number")
+                        f"Should have rejected invalid PAN number, got status: {response.status_code if response else 'No response'}")
         
         # Test READ (individual)
         response = self.make_request("GET", f"/customers/{self.created_customer_id}")
