@@ -6,7 +6,7 @@ import os
 import logging
 import re
 from pathlib import Path
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, ValidationError
 from typing import List, Optional
 import uuid
 from datetime import datetime, date
