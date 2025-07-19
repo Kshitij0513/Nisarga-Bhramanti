@@ -371,13 +371,13 @@ async def create_customer(customer_data: CustomerCreate):
     customer_dict['created_at'] = datetime.utcnow()
     customer_dict['updated_at'] = datetime.utcnow()
     
-    # Validate tour exists
+    # Create customer with validation (this will trigger Pydantic validation)
+    customer_obj = Customer(**customer_dict)
+    
+    # Validate tour exists (after Pydantic validation)
     tour = await db.tours.find_one({"tour_id": customer_dict['tour_id']})
     if not tour:
         raise HTTPException(status_code=404, detail="Tour not found")
-    
-    # Create customer with validation
-    customer_obj = Customer(**customer_dict)
     
     # Convert date objects to datetime for MongoDB storage
     customer_dict_for_db = customer_obj.dict()
