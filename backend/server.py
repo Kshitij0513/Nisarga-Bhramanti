@@ -311,6 +311,10 @@ async def update_tour(tour_id: str, tour_data: TourCreate):
     tour_dict['end_date'] = parse_date(tour_dict['end_date']).date()
     tour_dict['updated_at'] = datetime.utcnow()
     
+    # Convert date objects to datetime for MongoDB storage
+    tour_dict['start_date'] = datetime.combine(tour_dict['start_date'], datetime.min.time())
+    tour_dict['end_date'] = datetime.combine(tour_dict['end_date'], datetime.min.time())
+    
     result = await db.tours.update_one(
         {"tour_id": tour_id}, 
         {"$set": tour_dict}
