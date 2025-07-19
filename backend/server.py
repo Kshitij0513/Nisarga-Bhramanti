@@ -444,7 +444,7 @@ async def get_expenses(tour_id: Optional[str] = Query(None)):
         filter_query["tour_id"] = tour_id
     
     expenses = await db.expenses.find(filter_query).to_list(1000)
-    return [Expense(**expense) for expense in expenses]
+    return [Expense(**convert_datetime_to_date_for_expense(expense)) for expense in expenses]
 
 @api_router.post("/expenses", response_model=Expense)
 async def create_expense(expense_data: ExpenseCreate):
