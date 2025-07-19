@@ -385,6 +385,9 @@ async def update_customer(customer_id: str, customer_data: CustomerCreate):
     customer_dict['date_of_birth'] = parse_date(customer_dict['date_of_birth']).date()
     customer_dict['updated_at'] = datetime.utcnow()
     
+    # Convert date objects to datetime for MongoDB storage
+    customer_dict['date_of_birth'] = datetime.combine(customer_dict['date_of_birth'], datetime.min.time())
+    
     result = await db.customers.update_one(
         {"customer_id": customer_id}, 
         {"$set": customer_dict}
