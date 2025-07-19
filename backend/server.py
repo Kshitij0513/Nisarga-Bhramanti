@@ -545,6 +545,143 @@ async def validate_email_endpoint(email_data: dict):
     is_valid = validate_email(email)
     return {"valid": is_valid}
 
+# File Upload Endpoints
+@api_router.post("/customers/{customer_id}/upload-document")
+async def upload_customer_document(
+    customer_id: str,
+    file: UploadFile = File(...),
+    label: str = Form(...)
+):
+    """Upload a document/photo for a customer"""
+    try:
+        # Check if customer exists
+        customer_doc = await db.customers.find_one({"customer_id": customer_id})
+        if not customer_doc:
+            raise HTTPException(status_code=404, detail="Customer not found")
+        
+        # Read file content
+        file_content = await file.read()
+        
+        # Validate file size (limit to 5MB)
+        if len(file_content) > 5 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="File too large. Maximum size is 5MB")
+        
+        # Validate file type
+        allowed_types = ["image/jpeg", "image/png", "image/gif", "application/pdf"]
+        if file.content_type not in allowed_types:
+            raise HTTPException(status_code=400, detail="File type not allowed. Only JPEG, PNG, GIF, and PDF files are allowed")
+        
+        # Convert to base64
+        file_data_base64 = base64.b64encode(file_content).decode('utf-8')
+        
+        # Create document object
+        document = {
+            "document_id": str(uuid.uuid4()),
+            "label": label,
+            "filename": file.filename,
+            "file_type": file.content_type,
+            "file_data": file_data_base64,
+            "uploaded_at": datetime.utcnow()
+        }
+        
+        # Add document to customer's documents array
+        result = await db.customers.update_one(
+            {"customer_id": customer_id},
+            {
+                "$push": {"documents": document},
+                "$set": {"updated_at": datetime.utcnow()}
+            }
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=400, detail="Failed to upload document")
+        
+        return {
+            "message": "Document uploaded successfully",
+            "document_id": document["document_id"],
+            "label": label,
+            "filename": file.filename
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading document: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error during file upload")
+
+@api_router.get("/customers/{customer_id}/documents")
+async def get_customer_documents(customer_id: str):
+    """Get all documents for a customer"""
+    try:
+        customer_doc = await db.customers.find_one({"customer_id": customer_id})
+        if not customer_doc:
+            raise HTTPException(status_code=404, detail="Customer not found")
+        
+        documents = customer_doc.get("documents", [])
+        # Return document metadata (without base64 data for list view)
+        document_list = []
+        for doc in documents:
+            document_list.append({
+                "document_id": doc["document_id"],
+                "label": doc["label"],
+                "filename": doc["filename"],
+                "file_type": doc["file_type"],
+                "uploaded_at": doc["uploaded_at"]
+            })
+        
+        return {"documents": document_list}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving documents: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@api_router.get("/customers/{customer_id}/documents/{document_id}")
+async def get_customer_document(customer_id: str, document_id: str):
+    """Get a specific document with full data"""
+    try:
+        customer_doc = await db.customers.find_one({"customer_id": customer_id})
+        if not customer_doc:
+            raise HTTPException(status_code=404, detail="Customer not found")
+        
+        documents = customer_doc.get("documents", [])
+        document = next((doc for doc in documents if doc["document_id"] == document_id), None)
+        
+        if not document:
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        return document
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving document: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@api_router.delete("/customers/{customer_id}/documents/{document_id}")
+async def delete_customer_document(customer_id: str, document_id: str):
+    """Delete a customer document"""
+    try:
+        result = await db.customers.update_one(
+            {"customer_id": customer_id},
+            {
+                "$pull": {"documents": {"document_id": document_id}},
+                "$set": {"updated_at": datetime.utcnow()}
+            }
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Customer or document not found")
+        
+        return {"message": "Document deleted successfully"}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting document: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
 # Include the router in the main app
 app.include_router(api_router)
 
