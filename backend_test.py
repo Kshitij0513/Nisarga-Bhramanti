@@ -405,11 +405,16 @@ class BackendTester:
         response = self.make_request("POST", "/customers", invalid_customer_data)
         
         if response and response.status_code == 422:  # Validation error expected
-            self.log_test("customer_crud_tests", "invalid_aadhaar_rejection", "PASS", 
-                        "Correctly rejected customer with invalid Aadhaar")
+            error_response = response.json()
+            if "aadhaar_number" in str(error_response.get("detail", "")):
+                self.log_test("customer_crud_tests", "invalid_aadhaar_rejection", "PASS", 
+                            "Correctly rejected customer with invalid Aadhaar")
+            else:
+                self.log_test("customer_crud_tests", "invalid_aadhaar_rejection", "FAIL", 
+                            f"Rejected but wrong reason: {error_response}")
         else:
             self.log_test("customer_crud_tests", "invalid_aadhaar_rejection", "FAIL", 
-                        "Should have rejected invalid Aadhaar number")
+                        f"Should have rejected invalid Aadhaar number, got status: {response.status_code if response else 'No response'}")
         
         # Test CREATE with invalid PAN (should fail)
         invalid_pan_data = customer_data.copy()
