@@ -357,7 +357,12 @@ async def create_customer(customer_data: CustomerCreate):
     
     # Create customer with validation
     customer_obj = Customer(**customer_dict)
-    await db.customers.insert_one(customer_obj.dict())
+    
+    # Convert date objects to datetime for MongoDB storage
+    customer_dict_for_db = customer_obj.dict()
+    customer_dict_for_db['date_of_birth'] = datetime.combine(customer_dict_for_db['date_of_birth'], datetime.min.time())
+    
+    await db.customers.insert_one(customer_dict_for_db)
     
     # Update tour booked count
     await db.tours.update_one(
