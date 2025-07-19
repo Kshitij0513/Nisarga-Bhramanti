@@ -529,7 +529,7 @@ class BackendTester:
                             f"Missing required fields: {missing_fields}")
         else:
             self.log_test("dashboard_tests", "stats_retrieval", "FAIL", 
-                        "Failed to retrieve dashboard stats")
+                        f"Failed to retrieve dashboard stats - Status: {response.status_code if response else 'No response'}, Response: {response.text if response else 'None'}")
 
     def test_tour_booking_count_update(self):
         """Test that tour booking counts update when customers are added/removed"""
