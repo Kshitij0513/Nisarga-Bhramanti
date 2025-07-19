@@ -372,7 +372,10 @@ async def create_customer(customer_data: CustomerCreate):
     customer_dict['updated_at'] = datetime.utcnow()
     
     # Create customer with validation (this will trigger Pydantic validation)
-    customer_obj = Customer(**customer_dict)
+    try:
+        customer_obj = Customer(**customer_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     
     # Validate tour exists (after Pydantic validation)
     tour = await db.tours.find_one({"tour_id": customer_dict['tour_id']})
