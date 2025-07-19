@@ -432,7 +432,12 @@ async def create_expense(expense_data: ExpenseCreate):
     expense_dict['created_at'] = datetime.utcnow()
     
     expense_obj = Expense(**expense_dict)
-    await db.expenses.insert_one(expense_obj.dict())
+    
+    # Convert date objects to datetime for MongoDB storage
+    expense_dict_for_db = expense_obj.dict()
+    expense_dict_for_db['date'] = datetime.combine(expense_dict_for_db['date'], datetime.min.time())
+    
+    await db.expenses.insert_one(expense_dict_for_db)
     return expense_obj
 
 # Dashboard and Analytics Routes
