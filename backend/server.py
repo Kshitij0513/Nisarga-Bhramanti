@@ -112,6 +112,14 @@ def validate_email(email: str) -> bool:
     return bool(re.match(pattern, email))
 
 # Pydantic Models
+class Document(BaseModel):
+    document_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    label: str  # e.g., "Passport", "Aadhaar Card", "Photo", etc.
+    filename: str
+    file_type: str  # e.g., "image/jpeg", "application/pdf"
+    file_data: str  # base64 encoded file data
+    uploaded_at: datetime = Field(default_factory=datetime.utcnow)
+
 class Tour(BaseModel):
     tour_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
