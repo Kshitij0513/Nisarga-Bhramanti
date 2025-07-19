@@ -288,7 +288,13 @@ async def create_tour(tour_data: TourCreate):
     tour_dict['updated_at'] = datetime.utcnow()
     
     tour_obj = Tour(**tour_dict)
-    await db.tours.insert_one(tour_obj.dict())
+    
+    # Convert date objects to datetime for MongoDB storage
+    tour_dict_for_db = tour_obj.dict()
+    tour_dict_for_db['start_date'] = datetime.combine(tour_dict_for_db['start_date'], datetime.min.time())
+    tour_dict_for_db['end_date'] = datetime.combine(tour_dict_for_db['end_date'], datetime.min.time())
+    
+    await db.tours.insert_one(tour_dict_for_db)
     return tour_obj
 
 @api_router.get("/tours/{tour_id}", response_model=Tour)
