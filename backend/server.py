@@ -361,7 +361,7 @@ async def get_customers(tour_id: Optional[str] = Query(None)):
         filter_query["tour_id"] = tour_id
     
     customers = await db.customers.find(filter_query).to_list(1000)
-    return [Customer(**customer) for customer in customers]
+    return [Customer(**convert_datetime_to_date_for_customer(customer)) for customer in customers]
 
 @api_router.post("/customers", response_model=Customer)
 async def create_customer(customer_data: CustomerCreate):
