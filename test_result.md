@@ -221,3 +221,5 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: "Successfully implemented comprehensive tour operator app with advanced validation, UUID-based IDs, form review workflow, and complete dashboard. Ready for backend testing to validate all API endpoints and validation logic."
+  - agent: "main"
+    message: "User confirmed plan and added new requirements: 1) Document/photo upload with labels in customer form 2) UPI payment integration 3) Modern web app design 4) Public-facing customer form for website. Starting with backend testing first."
