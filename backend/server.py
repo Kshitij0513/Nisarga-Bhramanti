@@ -323,7 +323,7 @@ async def get_tour(tour_id: str):
     tour = await db.tours.find_one({"tour_id": tour_id})
     if not tour:
         raise HTTPException(status_code=404, detail="Tour not found")
-    return Tour(**tour)
+    return Tour(**convert_datetime_to_date_for_tour(tour))
 
 @api_router.put("/tours/{tour_id}", response_model=Tour)
 async def update_tour(tour_id: str, tour_data: TourCreate):
