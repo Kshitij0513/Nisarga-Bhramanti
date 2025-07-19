@@ -273,10 +273,31 @@ async def initialize_sample_data():
             await db.tours.insert_one(tour)
 
 # Tour Routes
+# Helper function to convert datetime objects back to date objects for Pydantic models
+def convert_datetime_to_date_for_tour(tour_data):
+    """Convert datetime objects to date objects for tour data"""
+    if 'start_date' in tour_data and isinstance(tour_data['start_date'], datetime):
+        tour_data['start_date'] = tour_data['start_date'].date()
+    if 'end_date' in tour_data and isinstance(tour_data['end_date'], datetime):
+        tour_data['end_date'] = tour_data['end_date'].date()
+    return tour_data
+
+def convert_datetime_to_date_for_customer(customer_data):
+    """Convert datetime objects to date objects for customer data"""
+    if 'date_of_birth' in customer_data and isinstance(customer_data['date_of_birth'], datetime):
+        customer_data['date_of_birth'] = customer_data['date_of_birth'].date()
+    return customer_data
+
+def convert_datetime_to_date_for_expense(expense_data):
+    """Convert datetime objects to date objects for expense data"""
+    if 'date' in expense_data and isinstance(expense_data['date'], datetime):
+        expense_data['date'] = expense_data['date'].date()
+    return expense_data
+
 @api_router.get("/tours", response_model=List[Tour])
 async def get_tours():
     tours = await db.tours.find().to_list(1000)
-    return [Tour(**tour) for tour in tours]
+    return [Tour(**convert_datetime_to_date_for_tour(tour)) for tour in tours]
 
 @api_router.post("/tours", response_model=Tour)
 async def create_tour(tour_data: TourCreate):
