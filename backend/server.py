@@ -344,7 +344,7 @@ async def update_tour(tour_id: str, tour_data: TourCreate):
         raise HTTPException(status_code=404, detail="Tour not found")
     
     updated_tour = await db.tours.find_one({"tour_id": tour_id})
-    return Tour(**updated_tour)
+    return Tour(**convert_datetime_to_date_for_tour(updated_tour))
 
 @api_router.delete("/tours/{tour_id}")
 async def delete_tour(tour_id: str):
