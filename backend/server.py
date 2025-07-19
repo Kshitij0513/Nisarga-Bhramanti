@@ -398,7 +398,7 @@ async def get_customer(customer_id: str):
     customer = await db.customers.find_one({"customer_id": customer_id})
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
-    return Customer(**customer)
+    return Customer(**convert_datetime_to_date_for_customer(customer))
 
 @api_router.put("/customers/{customer_id}", response_model=Customer)
 async def update_customer(customer_id: str, customer_data: CustomerCreate):
